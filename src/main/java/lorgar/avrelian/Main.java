@@ -23,18 +23,21 @@ public class Main {
             }
             Files.deleteIfExists(resultPath);
             final File result = new File(resultPath.toUri());
-            final BufferedWriter writer = new BufferedWriter(new FileWriter(result));
+            final FileWriter out = new FileWriter(result);
+            final BufferedWriter writer = new BufferedWriter(out);
             final File dump = new File(dumpPath);
             final Scanner scanner = new Scanner(dump);
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                if (!line.startsWith("/*") && !line.startsWith("--")) {
+                if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
+                        && !line.startsWith("UNLOCK TABLES")) {
                     writer.write(line);
                     writer.newLine();
                 }
             }
             scanner.close();
             writer.close();
+            out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
