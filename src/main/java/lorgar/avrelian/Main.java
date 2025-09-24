@@ -28,35 +28,39 @@ public class Main {
             final File dump = new File(dumpPath);
             final Scanner scanner = new Scanner(dump);
             boolean shouldBeNextFile = false;
-            boolean blocked = false;
+            boolean delimiterBlocked = false;
+            boolean createBlocked = false;
             boolean skiped = false;
             while (scanner.hasNextLine()) {
                 if (COUNTER % 100 == 0) {
                     shouldBeNextFile = true;
                 }
                 String line = scanner.nextLine();
-                if (shouldBeNextFile && !blocked) {
+                if (shouldBeNextFile && !delimiterBlocked && !createBlocked) {
                     writer = getWriter(writer);
                     shouldBeNextFile = false;
                 }
                 if (line.startsWith("SET")) skiped = !skiped;
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
-                        && !line.startsWith("UNLOCK TABLES") && !line.isBlank() && !skiped) {
+                        && !line.startsWith("UNLOCK TABLES") && !line.startsWith("SET") && !line.isBlank() && !skiped) {
 
                     if (line.startsWith("DROP TABLE") || line.startsWith("CREATE TABLE")
                             || line.startsWith("INSERT INTO")) {
                         addChangeset(writer);
+                        createBlocked = true;
                     }
 
                     if (line.contains("DELIMITER ;;")) {
-                        blocked = true;
+                        delimiterBlocked = true;
                         addProcedureChangeset(writer);
                     } else if (line.contains("DELIMITER ;") && !line.contains("DELIMITER ;;")) {
-                        blocked = false;
-                        writeLine(writer, line);
+                        delimiterBlocked = false;
+                        addProcedureEnd(writer);
                     } else {
                         writeLine(writer, line);
                     }
+
+                    if (line.trim().endsWith(";")) createBlocked = false;
                 }
             }
             scanner.close();
@@ -91,13 +95,18 @@ public class Main {
     private static void addProcedureChangeset(BufferedWriter writer) throws IOException {
         writer.newLine();
         writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++ + ":createProcedure:");
-        writeLine(writer, "DELIMITER");
+        writeLine(writer, "DELIMITER //");
+    }
+
+    private static void addProcedureEnd(BufferedWriter writer) throws IOException {
+        writeLine(writer, "//");
+        writeLine(writer, "DELIMITER ;");
     }
 
     private static void addUseCommand(BufferedWriter writer, String newDumpName) throws IOException {
         writer.newLine();
         writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++);
-        writeLine(writer, "USE " + newDumpName.substring(0, newDumpName.indexOf("_")) + ";");
+        writeLine(writer, "USE " + newDumpName.substring(0, newDumpName.lastIndexOf("_")) + ";");
     }
 
     private static void addBaseHeader(final BufferedWriter writer) throws IOException {
