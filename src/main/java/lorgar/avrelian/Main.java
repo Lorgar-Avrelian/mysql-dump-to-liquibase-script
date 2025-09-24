@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,10 +24,17 @@ public class Main {
     private static final String DUMP_DIRECTORY = "D:";
     private static final Path CURRENT_PATH = Paths.get("").toAbsolutePath();
     private static final String AUTHOR = "tokovenko";
+    private static String CURRENT_IP;
     private static int COUNTER = 1;
     private static int PART;
 
     public static void main(String[] args) {
+        try {
+            InetAddress ip = InetAddress.getLocalHost();
+            String CURRENT_IP = ip.getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         for (String dump : DUMPS) {
             createScript(dump);
         }
@@ -49,6 +58,7 @@ public class Main {
                     shouldBeNextFile = true;
                 }
                 String line = scanner.nextLine()
+                        .replaceAll("192.168.1.70", CURRENT_IP)
                         .replaceAll("com/nmscom/", "ru/opk_bulat/")
                         .replaceAll("com.nmscom", "ru.opk_bulat")
                         .replaceAll("nmscom", "opk_bulat");
