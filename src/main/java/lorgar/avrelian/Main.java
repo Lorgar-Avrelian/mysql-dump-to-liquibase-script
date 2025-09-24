@@ -29,6 +29,7 @@ public class Main {
         for (String dump : DUMPS) {
             createScript(dump);
         }
+        COUNTER = 1;
     }
 
     private static void createScript(String currentDump) {
