@@ -15,6 +15,7 @@ public class Main {
     private static final Path CURRENT_PATH = Paths.get("").toAbsolutePath();
     private static final String AUTHOR = "tokovenko";
     private static int COUNTER = 1;
+    private static int PART = 1;
 
     public static void main(String[] args) {
         createScript();
@@ -23,7 +24,7 @@ public class Main {
     private static void createScript() {
         final String dumpPath = DUMP_DIRECTORY + File.separator + DUMP_NAME;
         try {
-            final String newDumpName = DUMP_NAME.substring(0, DUMP_NAME.lastIndexOf("-")) + ".sql";
+            final String newDumpName = DUMP_NAME.substring(DUMP_NAME.indexOf("-") + 1, DUMP_NAME.lastIndexOf("-")) + "_" + PART++ + ".sql";
             final Path resultPath = Path.of(CURRENT_PATH + File.separator + "result" + File.separator + newDumpName);
             if (!Files.exists(resultPath.getParent())) {
                 Files.createDirectory(resultPath.getParent());
@@ -71,7 +72,7 @@ public class Main {
         writer.newLine();
         writer.write("-- changeset " + AUTHOR + ":" + COUNTER++);
         writer.newLine();
-        writer.write("USE " + newDumpName.substring(newDumpName.indexOf("-") + 1, newDumpName.indexOf(".")) + ";");
+        writer.write("USE " + newDumpName.substring(0, newDumpName.indexOf("_")) + ";");
         writer.newLine();
     }
 
