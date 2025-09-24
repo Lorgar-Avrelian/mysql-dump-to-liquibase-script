@@ -24,20 +24,13 @@ public class Main {
     private static void createScript() {
         final String dumpPath = DUMP_DIRECTORY + File.separator + DUMP_NAME;
         try {
-            final String newDumpName = DUMP_NAME.substring(DUMP_NAME.indexOf("-") + 1, DUMP_NAME.lastIndexOf("-")) + "_" + PART++ + ".sql";
-            final Path resultPath = Path.of(CURRENT_PATH + File.separator + "result" + File.separator + newDumpName);
-            if (!Files.exists(resultPath.getParent())) {
-                Files.createDirectory(resultPath.getParent());
-            }
-            Files.deleteIfExists(resultPath);
-            final File result = new File(resultPath.toUri());
-            final FileWriter out = new FileWriter(result);
-            final BufferedWriter writer = new BufferedWriter(out);
-            addBaseHeader(writer);
-            addUseCommand(writer, newDumpName);
+            BufferedWriter writer = getWriter(null);
             final File dump = new File(dumpPath);
             final Scanner scanner = new Scanner(dump);
             while (scanner.hasNextLine()) {
+                if (COUNTER % 100 == 0) {
+                    writer = getWriter(writer);
+                }
                 String line = scanner.nextLine();
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
                         && !line.startsWith("UNLOCK TABLES") && !line.isBlank()) {
@@ -54,10 +47,26 @@ public class Main {
             }
             scanner.close();
             writer.close();
-            out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static BufferedWriter getWriter(BufferedWriter previous) throws IOException {
+        if (previous != null) {
+            previous.close();
+        }
+        final String newDumpName = DUMP_NAME.substring(DUMP_NAME.indexOf("-") + 1, DUMP_NAME.lastIndexOf("-")) + "_" + PART++ + ".sql";
+        final Path resultPath = Path.of(CURRENT_PATH + File.separator + "result" + File.separator + newDumpName);
+        if (!Files.exists(resultPath.getParent())) {
+            Files.createDirectory(resultPath.getParent());
+        }
+        Files.deleteIfExists(resultPath);
+        final File result = new File(resultPath.toUri());
+        final BufferedWriter writer = new BufferedWriter(new FileWriter(result));
+        addBaseHeader(writer);
+        addUseCommand(writer, newDumpName);
+        return writer;
     }
 
     private static void addProcedureChangeset(BufferedWriter writer) throws IOException {
