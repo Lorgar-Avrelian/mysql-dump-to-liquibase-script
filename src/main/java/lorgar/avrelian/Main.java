@@ -27,21 +27,35 @@ public class Main {
             BufferedWriter writer = getWriter(null);
             final File dump = new File(dumpPath);
             final Scanner scanner = new Scanner(dump);
+            boolean shouldBeNextFile = false;
+            boolean blocked = false;
+            boolean skiped = false;
             while (scanner.hasNextLine()) {
                 if (COUNTER % 100 == 0) {
-                    writer = getWriter(writer);
+                    shouldBeNextFile = true;
                 }
                 String line = scanner.nextLine();
+                if (shouldBeNextFile && !blocked) {
+                    writer = getWriter(writer);
+                    shouldBeNextFile = false;
+                }
+                if (line.startsWith("SET")) skiped = !skiped;
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
-                        && !line.startsWith("UNLOCK TABLES") && !line.isBlank()) {
+                        && !line.startsWith("UNLOCK TABLES") && !line.isBlank() && !skiped) {
+
                     if (line.startsWith("DROP TABLE") || line.startsWith("CREATE TABLE")
-                            || line.startsWith("INSERT INTO"))
+                            || line.startsWith("INSERT INTO")) {
                         addChangeset(writer);
-                    if (!line.equals("DELIMITER ;;")) {
-                        writer.write(line);
-                        writer.newLine();
-                    } else {
+                    }
+
+                    if (line.contains("DELIMITER ;;")) {
+                        blocked = true;
                         addProcedureChangeset(writer);
+                    } else if (line.contains("DELIMITER ;") && !line.contains("DELIMITER ;;")) {
+                        blocked = false;
+                        writeLine(writer, line);
+                    } else {
+                        writeLine(writer, line);
                     }
                 }
             }
@@ -50,6 +64,11 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void writeLine(BufferedWriter writer, String line) throws IOException {
+        writer.write(line);
+        writer.newLine();
     }
 
     private static BufferedWriter getWriter(BufferedWriter previous) throws IOException {
@@ -71,28 +90,22 @@ public class Main {
 
     private static void addProcedureChangeset(BufferedWriter writer) throws IOException {
         writer.newLine();
-        writer.write("-- changeset " + AUTHOR + ":" + COUNTER++ + ":createProcedure:");
-        writer.newLine();
-        writer.write("DELIMITER");
-        writer.newLine();
+        writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++ + ":createProcedure:");
+        writeLine(writer, "DELIMITER");
     }
 
     private static void addUseCommand(BufferedWriter writer, String newDumpName) throws IOException {
         writer.newLine();
-        writer.write("-- changeset " + AUTHOR + ":" + COUNTER++);
-        writer.newLine();
-        writer.write("USE " + newDumpName.substring(0, newDumpName.indexOf("_")) + ";");
-        writer.newLine();
+        writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++);
+        writeLine(writer, "USE " + newDumpName.substring(0, newDumpName.indexOf("_")) + ";");
     }
 
     private static void addBaseHeader(final BufferedWriter writer) throws IOException {
-        writer.write("-- liquibase formatted sql");
-        writer.newLine();
+        writeLine(writer, "-- liquibase formatted sql");
     }
 
     private static void addChangeset(BufferedWriter writer) throws IOException {
         writer.newLine();
-        writer.write("-- changeset " + AUTHOR + ":" + COUNTER++);
-        writer.newLine();
+        writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++);
     }
 }
