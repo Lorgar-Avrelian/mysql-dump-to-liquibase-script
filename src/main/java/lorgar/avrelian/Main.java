@@ -31,7 +31,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             InetAddress ip = InetAddress.getLocalHost();
-            String CURRENT_IP = ip.getHostAddress();
+            CURRENT_IP = ip.getHostAddress();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
