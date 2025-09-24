@@ -40,7 +40,15 @@ public class Main {
                     writer = getWriter(writer);
                     shouldBeNextFile = false;
                 }
+                if (line.contains("CREATE") && line.contains("TRIGGER") && !line.contains("INSERT INTO") && !line.contains("VIEW")) {
+                    line = "CREATE " + line.trim().substring(line.indexOf("TRIGGER"));
+                }
+                String lineCheck = line.trim().toUpperCase();
+                if (lineCheck.contains("END */;;") || lineCheck.contains("END ;;")) line = "END;";
+                if (lineCheck.equals("BEGIN")) line = "BEGIN";
                 if (line.startsWith("SET")) skiped = !skiped;
+                if (lineCheck.contains("CREATE DEFINER") && lineCheck.contains("FUNCTION"))
+                    line += " DETERMINISTIC READS SQL DATA";
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
                         && !line.startsWith("UNLOCK TABLES") && !line.startsWith("SET") && !line.isBlank() && !skiped) {
 
