@@ -49,6 +49,7 @@ public class Main {
                 }
                 String line = scanner.nextLine()
                         .replaceAll("com/nmscom/", "ru/opk_bulat/")
+                        .replaceAll("com.nmscom", "ru.opk_bulat")
                         .replaceAll("nmscom", "opk_bulat");
                 if (shouldBeNextFile && !delimiterBlocked && !createBlocked) {
                     writer = getWriter(writer);
