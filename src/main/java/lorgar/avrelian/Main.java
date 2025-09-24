@@ -7,21 +7,33 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    private static final String DUMP_NAME = "dump-db_msp-202509231039.sql";
+    private static final List<String> DUMPS = new ArrayList<>(List.of(
+            "dump-db_msp-202509231039.sql",
+            "dump-db_msp_logs-202509231040.sql",
+            "dump-db_msp_sysmng-202509231040.sql",
+            "dump-nms_comp-202509231040.sql"
+    ));
+    private static String DUMP_NAME;
     private static final String DUMP_DIRECTORY = "D:";
     private static final Path CURRENT_PATH = Paths.get("").toAbsolutePath();
     private static final String AUTHOR = "tokovenko";
     private static int COUNTER = 1;
-    private static int PART = 1;
+    private static int PART;
 
     public static void main(String[] args) {
-        createScript();
+        for (String dump : DUMPS) {
+            createScript(dump);
+        }
     }
 
-    private static void createScript() {
+    private static void createScript(String currentDump) {
+        PART = 1;
+        DUMP_NAME = currentDump;
         final String dumpPath = DUMP_DIRECTORY + File.separator + DUMP_NAME;
         try {
             BufferedWriter writer = getWriter(null);
@@ -35,7 +47,9 @@ public class Main {
                 if (COUNTER % 100 == 0) {
                     shouldBeNextFile = true;
                 }
-                String line = scanner.nextLine();
+                String line = scanner.nextLine()
+                        .replaceAll("com/nmscom/", "ru/opk_bulat/")
+                        .replaceAll("nmscom", "opk_bulat");
                 if (shouldBeNextFile && !delimiterBlocked && !createBlocked) {
                     writer = getWriter(writer);
                     shouldBeNextFile = false;
@@ -46,7 +60,7 @@ public class Main {
                 String lineCheck = line.trim().toUpperCase();
                 if (lineCheck.contains("END */;;") || lineCheck.contains("END ;;")) line = "END;";
                 if (lineCheck.equals("BEGIN")) line = "BEGIN";
-                if (line.startsWith("SET")) skiped = !skiped;
+                if (line.startsWith("SET") && !line.contains("SESSION")) skiped = !skiped;
                 if (lineCheck.contains("CREATE DEFINER") && lineCheck.contains("FUNCTION"))
                     line += " DETERMINISTIC READS SQL DATA";
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
