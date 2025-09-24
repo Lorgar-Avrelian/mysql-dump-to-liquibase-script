@@ -94,13 +94,13 @@ public class Main {
 
     private static void addProcedureChangeset(BufferedWriter writer) throws IOException {
         writer.newLine();
-        writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++ + ":createProcedure:");
-        writeLine(writer, "DELIMITER //");
+        writeLine(writer, "-- changeset " + AUTHOR + ":" + COUNTER++ + " runOnChange:true endDelimiter:/ stripComments:false");
     }
 
     private static void addProcedureEnd(BufferedWriter writer) throws IOException {
-        writeLine(writer, "//");
-        writeLine(writer, "DELIMITER ;");
+        writeLine(writer, "/");
+        writer.newLine();
+        writeLine(writer, "--rollback not required");
     }
 
     private static void addUseCommand(BufferedWriter writer, String newDumpName) throws IOException {
