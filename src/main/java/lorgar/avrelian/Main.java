@@ -33,12 +33,15 @@ public class Main {
             final FileWriter out = new FileWriter(result);
             final BufferedWriter writer = new BufferedWriter(out);
             addBaseHeader(writer);
+            addUseCommand(writer, newDumpName);
             final File dump = new File(dumpPath);
             final Scanner scanner = new Scanner(dump);
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
-                        && !line.startsWith("UNLOCK TABLES")) {
+                        && !line.startsWith("UNLOCK TABLES") && !line.isBlank()) {
+                    if (line.startsWith("DROP TABLE") || line.startsWith("CREATE TABLE")
+                            || line.startsWith("INSERT INTO")) addChangeset(writer);
                     writer.write(line);
                     writer.newLine();
                 }
@@ -51,13 +54,21 @@ public class Main {
         }
     }
 
+    private static void addUseCommand(BufferedWriter writer, String newDumpName) throws IOException {
+        writer.newLine();
+        writer.write("-- changeset " + AUTHOR + ":" + COUNTER++);
+        writer.newLine();
+        writer.write("USE " + newDumpName.substring(newDumpName.indexOf("-") + 1, newDumpName.indexOf(".")) + ";");
+        writer.newLine();
+    }
+
     private static void addBaseHeader(final BufferedWriter writer) throws IOException {
         writer.write("-- liquibase formatted sql");
-        writer.newLine();
         writer.newLine();
     }
 
     private static void addChangeset(BufferedWriter writer) throws IOException {
+        writer.newLine();
         writer.write("-- changeset " + AUTHOR + ":" + COUNTER++);
         writer.newLine();
     }
