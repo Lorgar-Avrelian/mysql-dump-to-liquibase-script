@@ -41,9 +41,14 @@ public class Main {
                 if (!line.startsWith("/*") && !line.startsWith("--") && !line.startsWith("LOCK TABLES")
                         && !line.startsWith("UNLOCK TABLES") && !line.isBlank()) {
                     if (line.startsWith("DROP TABLE") || line.startsWith("CREATE TABLE")
-                            || line.startsWith("INSERT INTO")) addChangeset(writer);
-                    writer.write(line);
-                    writer.newLine();
+                            || line.startsWith("INSERT INTO"))
+                        addChangeset(writer);
+                    if (!line.equals("DELIMITER ;;")) {
+                        writer.write(line);
+                        writer.newLine();
+                    } else {
+                        addProcedureChangeset(writer);
+                    }
                 }
             }
             scanner.close();
@@ -52,6 +57,14 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void addProcedureChangeset(BufferedWriter writer) throws IOException {
+        writer.newLine();
+        writer.write("-- changeset " + AUTHOR + ":" + COUNTER++ + ":createProcedure:");
+        writer.newLine();
+        writer.write("DELIMITER");
+        writer.newLine();
     }
 
     private static void addUseCommand(BufferedWriter writer, String newDumpName) throws IOException {
